@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
-
-const POSTGRES_URL = ""
 
 type User struct {
 	ID       int
@@ -29,7 +29,14 @@ func main() {
 	}).Methods("GET")
 
 	r.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
-		db, err := sql.Open("postgres", POSTGRES_URL)
+		w.Header().Set("Content-Type", "application/json")
+
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error oading .env file")
+		}
+
+		db, err := sql.Open("postgres", os.Getenv("POSTGRES_URL"))
 		if err != nil {
 			log.Fatal("failed to open a db connection:", err)
 		}
