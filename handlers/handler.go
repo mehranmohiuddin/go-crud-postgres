@@ -91,3 +91,30 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(user)
 }
+
+func CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var user models.User
+
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		log.Fatalf("Unable to decode the request body. %v", err)
+	}
+
+	db := createConnection()
+	defer db.Close()
+
+	sqlStatement := `INSERT INTO users (name, location, age) VALUES ($1, $2, $3) RETURNING userid`
+
+	var id int64
+
+	err = db.QueryRow(sqlStatement, user.Name, user.Location, user.Age).Scan(&id)
+	if err != nil {
+		log.Fatalf("Unable to exeucte the query. %v", err)
+	}
+
+	msg := fmt.Sprintf("Inserted a single record: %v", id)
+
+	json.NewEncoder(w).Encode(msg)
+}

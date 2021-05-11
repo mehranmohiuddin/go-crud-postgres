@@ -12,6 +12,7 @@ func Router() *mux.Router {
 	r.HandleFunc("/", handlers.BaseHandler).Methods("GET")
 	r.HandleFunc("/users", handlers.GetUsersHandler).Methods("GET")
 	r.HandleFunc("/users/{id}", handlers.GetUserHandler).Methods("GET")
+	r.HandleFunc("/users", handlers.CreateUsersHandler).Methods("POST")
 
 	return r
 }
