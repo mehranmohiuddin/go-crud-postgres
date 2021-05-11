@@ -93,8 +93,6 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	var user models.User
 
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -116,5 +114,68 @@ func CreateUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	msg := fmt.Sprintf("Inserted a single record: %v", id)
 
+	json.NewEncoder(w).Encode(msg)
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+
+	id, err := strconv.Atoi(params["id"])
+	if err != nil {
+		log.Fatalf("Unable to convert the string into int.  %v", err)
+	}
+
+	db := createConnection()
+	defer db.Close()
+
+	sqlStatement := `DELETE FROM users WHERE userid=$1`
+	res, err := db.Exec(sqlStatement, id)
+	if err != nil {
+		log.Fatalf("Unable to execute the query. %v", err)
+	}
+
+	deletedRows, err := res.RowsAffected()
+	if err != nil {
+		log.Fatalf("Error while checking the affected rows. %v", err)
+	}
+
+	fmt.Printf("Total rows/record affected %v", deletedRows)
+
+	msg := fmt.Sprintf("User updated successfully. Total rows/record affected %v", deletedRows)
+	json.NewEncoder(w).Encode(msg)
+}
+
+// UpdateUser update user's detail in the postgres db
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+
+	id, err := strconv.Atoi(params["id"])
+	if err != nil {
+		log.Fatalf("Unable to convert the string into int.  %v", err)
+	}
+
+	var user models.User
+
+	err = json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		log.Fatalf("Unable to decode the request body.  %v", err)
+	}
+
+	db := createConnection()
+	defer db.Close()
+
+	sqlStatement := `UPDATE users SET name=$2, location=$3, age=$4 WHERE userid=$1`
+	res, err := db.Exec(sqlStatement, id, user.Name, user.Location, user.Age)
+	if err != nil {
+		log.Fatalf("Unable to execute the query. %v", err)
+	}
+
+	updatedRows, err := res.RowsAffected()
+	if err != nil {
+		log.Fatalf("Error while checking the affected rows. %v", err)
+	}
+
+	fmt.Printf("Total rows/record affected %v", updatedRows)
+	msg := fmt.Sprintf("User updated successfully. Total rows/record affected %v", updatedRows)
 	json.NewEncoder(w).Encode(msg)
 }
